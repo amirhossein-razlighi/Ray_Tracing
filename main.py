@@ -4,20 +4,53 @@ import matplotlib.pyplot as plt
 width = 300
 height = 200
 
-camera = np.array([0, 0, 1])
-ratio = 1.0 * width / height
-screen = (-1, 1.0 / ratio, 1, -1.0 / ratio)  # left, top, right, bottom
 
-image = np.zeros((height, width, 3))
+def get_sphere_intersect(sphere_center, sphere_radius, ray_origin, ray_direction):
+    """
+    Return the closest intersection point between the ray and the sphere
+    """
+    a = np.linalg.norm(ray_direction) ** 2  # if normalized, this is 1
+    b = 2 * np.dot(ray_direction, ray_origin - sphere_center)
+    c = np.linalg.norm(ray_origin - sphere_center) ** 2 - sphere_radius**2
+    delta = b**2 - 4 * a * c
 
-x, y = np.meshgrid(
-    np.linspace(screen[0], screen[2], width), np.linspace(screen[1], screen[3], height)
-)
+    if delta > 0:
+        t1 = (-b - np.sqrt(delta)) / (2 * a)
+        t2 = (-b + np.sqrt(delta)) / (2 * a)
 
-for i in range(height):
-    for j in range(width):
-        # image[i, j] = ...
+        if t1 > 0 and t2 > 0:  # check if the intersection is in front of the camera
+            return min(t1, t2)  # return the closest intersection point
+
+    return None
+
+
+def main():
+    camera = np.array([0, 0, 1])
+    ratio = 1.0 * width / height
+    screen = (-1, 1.0 / ratio, 1, -1.0 / ratio)  # left, top, right, bottom
+
+    # Define the objects present in the scene
+    objects = [
+        {"center": np.array([-0.2, 0, 1]), "radius": 0.7},
+        {"center": np.array([0.1, -0.3, 0]), "radius": 0.1},
+        {"center": np.array([-0.3, 0, 0]), "radius": 0.15},
+    ]
+
+    image = np.zeros((height, width, 3))
+
+    x_ax, y_ax = np.meshgrid(
+        np.linspace(screen[0], screen[2], width),
+        np.linspace(screen[1], screen[3], height),
+    )
+
+    for i, y in enumerate(y_ax):
+        for j, x in enumerate(x_ax):
+            # image[i, j] = ...
+            pixel = np.array([x, y, 0])
+            direction = pixel - camera
+            direction /= np.linalg.norm(direction)  # normalize
+
         print("progress: %d/%d" % (i + 1, height))
 
-plt.imshow(image)
-plt.show()
+    plt.imshow(image)
+    plt.show()
