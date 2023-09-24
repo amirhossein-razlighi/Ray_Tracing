@@ -1,4 +1,4 @@
-# Basic Ray Tracig in Python
+# Basic Ray Tracing in Python
 In this repo, we implement basic ray tracing concepts from scratch in python, using only `numpy` and `matplotlib`. The goal is to understand the basic concepts of ray tracing, and to have a working code that can be used to test and experiment with different ideas.
 
 ## Installation and Setup
