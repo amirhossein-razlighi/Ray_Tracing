@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 width = 300
 height = 200
@@ -50,23 +51,44 @@ def main():
 
     # Define the objects present in the scene
     objects = [
-        {"center": np.array([-0.2, 0, 1]), "radius": 0.7},
-        {"center": np.array([0.1, -0.3, 0]), "radius": 0.1},
-        {"center": np.array([-0.3, 0, 0]), "radius": 0.15},
+        {
+            "center": np.array([-0.2, 0, -1]),
+            "radius": 0.7,
+            "ambient": np.array([0.1, 0, 0]),
+            "diffuse": np.array([0.7, 0, 0]),
+            "specular": np.array([1, 1, 1]),
+            "shininess": 100,
+        },
+        {
+            "center": np.array([0.1, -0.3, 0]),
+            "radius": 0.1,
+            "ambient": np.array([0.1, 0, 0.1]),
+            "diffuse": np.array([0.7, 0, 0.7]),
+            "specular": np.array([1, 1, 1]),
+            "shininess": 100,
+        },
+        {
+            "center": np.array([-0.3, 0, 0]),
+            "radius": 0.15,
+            "ambient": np.array([0, 0.1, 0]),
+            "diffuse": np.array([0, 0.6, 0]),
+            "specular": np.array([1, 1, 1]),
+            "shininess": 100,
+        },
     ]
 
     # Define the light source
-    light = {"position": np.array([5, 5, 5])}
+    light = {
+        "position": np.array([5, 5, 5]),
+        "ambient": np.array([1, 1, 1]),
+        "diffuse": np.array([1, 1, 1]),
+        "specular": np.array([1, 1, 1]),
+    }
 
     image = np.zeros((height, width, 3))
 
-    x_ax, y_ax = np.meshgrid(
-        np.linspace(screen[0], screen[2], width),
-        np.linspace(screen[1], screen[3], height),
-    )
-
-    for i, y in enumerate(y_ax):
-        for j, x in enumerate(x_ax):
+    for i, y in tqdm(enumerate(np.linspace(screen[1], screen[3], height))):
+        for j, x in enumerate(np.linspace(screen[0], screen[2], width)):
             pixel = np.array([x, y, 0])
             direction = pixel - camera
             direction /= np.linalg.norm(direction)  # normalize
@@ -97,8 +119,39 @@ def main():
 
             if is_shadowed:
                 continue
-              
-        print("progress: %d/%d" % (i + 1, height))
+
+            # RGB using Blenn-Phong model
+            illumination = np.zeros((3))
+
+            # add ambient
+            illumination += nearest_object["ambient"] * light["ambient"]
+
+            # add diffuse
+            illumination += (
+                nearest_object["diffuse"]
+                * light["diffuse"]
+                * np.dot(light_direction, normal_to_surface)
+            )
+
+            # add specular
+            intersect_to_camera = camera - intersection
+            intersect_to_camera /= np.linalg.norm(intersect_to_camera)  # normalize
+
+            H = intersect_to_camera + light_direction
+            H /= np.linalg.norm(H)  # normalize
+
+            illumination += (
+                nearest_object["specular"]
+                * light["specular"]
+                * np.dot(normal_to_surface, H) ** (nearest_object["shininess"] / 4)
+            )
+
+            # set the pixel color
+            image[i, j] = np.clip(illumination, 0, 1)
 
     plt.imshow(image)
     plt.show()
+
+
+if __name__ == "__main__":
+    main()
