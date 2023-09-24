@@ -81,18 +81,23 @@ def main():
 
             intersection = camera + min_distance * direction
 
-            # find the direction of light with respect to the intersection point
-            light_dir = light["position"] - intersection
-            light_dir /= np.linalg.norm(light_dir)  # normalize
+            # find the normal to the intersection point
+            normal_to_surface = intersection - nearest_object["center"]
+            normal_to_surface /= np.linalg.norm(normal_to_surface)  # normalize
+
+            # find the unit direction vector from the intersection point to the light source
+            light_direction = light["position"] - intersection
+            light_direction /= np.linalg.norm(light_direction)  # normalize
 
             _, min_distance = nearest_intersected_object(
-                objects, intersection, light_dir
+                objects, intersection, light_direction
             )
-            intersection_to_light_dist = np.linalg.norm(
-                light["position"] - intersection
-            )
+            intersect_to_light_dist = np.linalg.norm(light["position"] - intersection)
+            is_shadowed = min_distance < intersect_to_light_dist
 
-            is_shadowed = min_distance < intersection_to_light_dist
+            if is_shadowed:
+                continue
+              
         print("progress: %d/%d" % (i + 1, height))
 
     plt.imshow(image)
