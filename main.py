@@ -55,6 +55,9 @@ def main():
         {"center": np.array([-0.3, 0, 0]), "radius": 0.15},
     ]
 
+    # Define the light source
+    light = {"position": np.array([5, 5, 5])}
+
     image = np.zeros((height, width, 3))
 
     x_ax, y_ax = np.meshgrid(
@@ -77,7 +80,19 @@ def main():
                 continue
 
             intersection = camera + min_distance * direction
-            
+
+            # find the direction of light with respect to the intersection point
+            light_dir = light["position"] - intersection
+            light_dir /= np.linalg.norm(light_dir)  # normalize
+
+            _, min_distance = nearest_intersected_object(
+                objects, intersection, light_dir
+            )
+            intersection_to_light_dist = np.linalg.norm(
+                light["position"] - intersection
+            )
+
+            is_shadowed = min_distance < intersection_to_light_dist
         print("progress: %d/%d" % (i + 1, height))
 
     plt.imshow(image)
