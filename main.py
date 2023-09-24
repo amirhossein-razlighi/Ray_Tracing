@@ -24,6 +24,25 @@ def get_sphere_intersect(sphere_center, sphere_radius, ray_origin, ray_direction
     return None
 
 
+def nearest_intersected_object(objects, ray_origin, ray_direction):
+    """
+    Return the nearest object and its intersection point with the ray
+    """
+    distances = [
+        get_sphere_intersect(obj["center"], obj["radius"], ray_origin, ray_direction)
+        for obj in objects
+    ]
+    nearest_object = None
+    min_distance = np.inf
+
+    for index, distance in enumerate(distances):
+        if distance and distance < min_distance:
+            min_distance = distance
+            nearest_object = objects[index]
+
+    return nearest_object, min_distance
+
+
 def main():
     camera = np.array([0, 0, 1])
     ratio = 1.0 * width / height
@@ -45,11 +64,20 @@ def main():
 
     for i, y in enumerate(y_ax):
         for j, x in enumerate(x_ax):
-            # image[i, j] = ...
             pixel = np.array([x, y, 0])
             direction = pixel - camera
             direction /= np.linalg.norm(direction)  # normalize
 
+            # Find the nearest intersection
+            nearest_object, min_distance = nearest_intersected_object(
+                objects, camera, direction
+            )
+
+            if nearest_object is None:
+                continue
+
+            intersection = camera + min_distance * direction
+            
         print("progress: %d/%d" % (i + 1, height))
 
     plt.imshow(image)
